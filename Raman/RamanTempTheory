@@ -8,43 +8,71 @@ Created on Thu Jan 11 10:22:33 2024
 Anti-stokes:Stokes ratio temperature calcualor
 """
 import math
-import scipy.integrate
+import scipy.signal
 import numpy as np
+from matplotlib import pyplot as plt
 
 #input file
 infile = open(r"/Users/willstoll/Desktop/Sulfer.asc", "r")
 x, y = np.loadtxt(infile, unpack=True, delimiter=",")
 
-#constants
-kb = 1.380649*10**(-23) #J/K
-h = 6.62607015*10**(-34) #J/hz
-vo = 12738.85 #785nm in wavenumbers
-c = 2.998*10**10 #cm/s
+#Plot
+ax = plt.gca()
+plt.plot(x, (y))
+plt.xlim(-300, 300)
+#plt.ylim(340000, 400000)
+#plt.title('TMA-BPE')
+plt.grid(True)
+plt.legend()
+plt.xlabel('Raman Shift cm-1')
+plt.ylabel('Counts')
+plt.tight_layout()
+plt.savefig("/Users/willstoll/Desktop/temp.png", dpi=500)
+plt.show()
+
+#Lists
+temps = []
+
 
 #USER INPUTTED
-Tdiode = 78 #K
-baseline = 278000
-vr = 40.81-0.874 #Raman shift in wavenumbers
-a = 316285 - baseline #antistokes counts 
-s = 343638 - baseline #stokes counts
+Tdiode = 293 #K
+minheight = 225000
+
+#find peaks
+antipeaks = scipy.signal.find_peaks(y[0:950], height=(minheight))
+stokespeaks = scipy.signal.find_peaks(y[1050:2000], height=(minheight))
+
+def calctemp(anti,stoke,vr,y):
+    #constants
+    kb = 1.380649*10**(-23) #J/K
+    h = 6.62607015*10**(-34) #J/hz
+    vo = 12738.85 #785nm in wavenumbers
+    c = 2.998*10**10 #cm/s
+    baseline = y[-1]
+    
+    #Test for theoretical temp from ratio
+    Texp = (math.log(((anti-baseline)/(stoke-baseline))*(((vo-vr)/(vo+vr))**3))*(kb/(-h*c*vr)))**(-1)
+    return Texp
+
+    
+for i in range(len(antipeaks[1]['peak_heights'])):
+    antipeak_index = i
+    stokespeak_index = len(stokespeaks[1]['peak_heights']) - 1 - i
+
+    temps.append(calctemp(
+        antipeaks[1]['peak_heights'][antipeak_index],
+        stokespeaks[1]['peak_heights'][stokespeak_index],
+        (-x[antipeaks[0][antipeak_index]] + x[stokespeaks[0][stokespeak_index] + 1050]) / 2,y))
+
+    print("Peak:" + str((x[antipeaks[0][antipeak_index]], x[stokespeaks[0][stokespeak_index] + 1050])))
 
 
-#calculate integrals (GIVES POOR RESULTS)
-#stokesintegral = scipy.integrate.trapz(y[1473:1538]-baseline,x=x[1473:1538])
-#antistokesintegral = scipy.integrate.trapz(y[495:548]-baseline,x=x[495:548])
-#integralratio= antistokesintegral/stokesintegral
 
-#Test for theoretical temp from ratio
-Texp = (math.log((a/s)*(((vo-vr)/(vo+vr))**3))*(kb/(-h*c*vr)))**(-1)
+    
 
 #Test for theory ratio from hypothetical temperature
-ratio = (((vo+vr)/(vo-vr))**3)*math.exp(-(h*c*vr)/(kb*Tdiode))
+#ratio = (((vo+vr)/(vo-vr))**3)*math.exp(-(h*c*vr)/(kb*Tdiode))
 
-#Test for exp ratio
-exprat = a/s
 
-print("Theoretical antistokes/stokes ratio: " + str(round(ratio, 2)))
-print("Counts Ratio: " + str(round(exprat,2)))
-print("Temp estimated from theory: " + str(round(Texp,2)))
+print("Temp estimated from theory: " + str(round(sum(temps)/len(temps),2)))
 print("Diode Temp: " + str(Tdiode))
-#print("Integral Ratio: " + str(round(integralratio,2)))
