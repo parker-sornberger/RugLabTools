@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 11 10:22:33 2024
+
+@author: willstoll
+
+Anti-stokes:Stokes ratio temperature calcualor
+"""
+import math
+import scipy.integrate
+import numpy as np
+
+#input file
+infile = open(r"/Users/willstoll/Desktop/Sulfer.asc", "r")
+x, y = np.loadtxt(infile, unpack=True, delimiter=",")
+
+#constants
+kb = 1.380649*10**(-23) #J/K
+h = 6.62607015*10**(-34) #J/hz
+vo = 12738.85 #785nm in wavenumbers
+c = 2.998*10**10 #cm/s
+
+#USER INPUTTED
+Tdiode = 78 #K
+baseline = 278000
+vr = 40.81-0.874 #Raman shift in wavenumbers
+a = 316285 - baseline #antistokes counts 
+s = 343638 - baseline #stokes counts
+
+
+#calculate integrals (GIVES POOR RESULTS)
+#stokesintegral = scipy.integrate.trapz(y[1473:1538]-baseline,x=x[1473:1538])
+#antistokesintegral = scipy.integrate.trapz(y[495:548]-baseline,x=x[495:548])
+#integralratio= antistokesintegral/stokesintegral
+
+#Test for theoretical temp from ratio
+Texp = (math.log((a/s)*(((vo-vr)/(vo+vr))**3))*(kb/(-h*c*vr)))**(-1)
+
+#Test for theory ratio from hypothetical temperature
+ratio = (((vo+vr)/(vo-vr))**3)*math.exp(-(h*c*vr)/(kb*Tdiode))
+
+#Test for exp ratio
+exprat = a/s
+
+print("Theoretical antistokes/stokes ratio: " + str(round(ratio, 2)))
+print("Counts Ratio: " + str(round(exprat,2)))
+print("Temp estimated from theory: " + str(round(Texp,2)))
+print("Diode Temp: " + str(Tdiode))
+#print("Integral Ratio: " + str(round(integralratio,2)))
