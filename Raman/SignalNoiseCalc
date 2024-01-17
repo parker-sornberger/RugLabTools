@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 16 12:16:10 2024
+
+@author: willstoll
+Signal to noise calculator
+"""
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+infile = open(r"/Users/willstoll/Desktop/TMA-XXX/AZO/AZO125.asc", "r")
+x, y = np.loadtxt(infile, unpack=True, delimiter=",")
+    
+#Cut Rayleigh Peak
+x = x[1050:]
+y = y[1050:]
+
+#Normalize the Spectrum
+def normalizey(y):
+    min_value = np.min(y)
+    max_value = np.max(y-min_value)
+    y = y - min_value
+    y = y / max_value
+    return y
+y = normalizey(y)
+
+#Select Range of baseline
+NRx = 160, 200
+
+#Find range of background
+roundx = np.around(x)
+index = np.where(roundx == NRx[0])[0][0], np.where(roundx == NRx[1])[0][0]
+
+#Calculate the Root Mean Square of the selected portion of baseline
+def calculate_rms(y):
+    average = sum(y)/len(y)
+    ydif = y-average
+    ysquare = ydif**2
+    squareavg = sum(ysquare)/len(y)
+    rms = (squareavg)**0.5
+    return rms,average
+
+RMS, backgroundavg = calculate_rms(y[index[0]:index[1]])
+
+STN = (1-backgroundavg)/RMS
+
+print("Signal-to-Noise Ratio (SNR) of the Raman spectrum:", STN)
+
+#Plot
+ax = plt.gca()
+plt.plot(x, (y))
+plt.xlim(25, 300)
+#plt.ylim(340000, 400000)
+#plt.title('TMA-BPE')
+plt.grid(True)
+#plt.legend()
+plt.xlabel('Raman Shift cm-1')
+plt.ylabel('Counts')
+plt.tight_layout()
+plt.savefig("/Users/willstoll/Desktop/temp.png", dpi=500)
+plt.show()
