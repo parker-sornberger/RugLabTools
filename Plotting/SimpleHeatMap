@@ -1,0 +1,19 @@
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+df = pd.DataFrame({"0.5":[142,166,169,176,173],"1":[169,178,198,197,189],"2":[195,185,188,187,191],"3":[191,191,192,190,191]}, index=["100","200","300","400","500",])
+
+
+
+# Create a heatmap using seaborn
+sns.heatmap(df, annot=True, cmap='magma', fmt=".2f")
+
+# Show the plot
+plt.title('Signal to Noise')
+plt.xlabel('Accumulation Time (s)')
+plt.ylabel('Accumulations')
+plt.savefig("/Users/willstoll/Desktop/temp.png", dpi=500)
+plt.show()
