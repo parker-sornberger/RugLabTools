@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb  5 14:43:22 2024
+
+@author: wbsst
+"""
+
+import matplotlib.pyplot as plt
+
+from mpl_toolkits.mplot3d import axes3d
+import numpy as np
+
+
+
+ax = plt.figure().add_subplot(projection='3d')
+
+
+infile = open(r"C:/Users/wbsst/Box/Documents/Classes/Comp Chem/Lab 2/ala.dat", "r")
+X, Y, Z = np.loadtxt(infile, unpack=True, delimiter="\t")
+
+# Plot the 3D surface
+ax.plot_trisurf(X, Y, Z*2625.5, edgecolor='black', lw=0.5)
+#ax.scatter([-30.17,-55.46,-69.76],[0.41,0.15,-0.46],[300,300,300], color='red')
+
+ax.view_init(elev=90, azim=0)
+plt.xlabel('Dihedral Angle')
+plt.ylabel('Dihedral Angle')
+ax.set_zlabel("Energy (kJ/mol)")
+
+
+plt.savefig(r"C:\Users\wbsst\Desktop/PES.png", dpi=500)
+plt.show()
