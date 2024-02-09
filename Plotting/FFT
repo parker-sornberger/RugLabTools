@@ -12,11 +12,11 @@ import csv
 import math
 
 #opening files
-infile_sample = open(r"C:/Users/wbsst/OneDrive/Documents/THzData/Syracure_Thio/thiourea_halfpercent_78K_20000_8_1_23.csv", "r")
-infile_blank = open(r"C:/Users/wbsst/OneDrive/Documents/THzData/Syracure_Thio/PTFE_78K_20000_8_1_23.csv", "r")
+infile_sample = open(r"C:\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test\coCO3_pos_2_2000.csv", "r")
+infile_blank = open(r"C:\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test\ptfe_pos1_2000_2.csv", "r")
 
 #outfile
-#outfile = csv.writer(open(r"", "w"))
+outfile = csv.writer(open(r"C:\\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test_coCo3_2_ptfe1_out.csv", 'w', newline= ''))
 
 
 #Time Data Raw
@@ -52,7 +52,7 @@ waveformy = pulse_sample
 
 
 #timecut the data
-timecut = 70
+timecut = 55
 
 index = [range(timecut*20, len(time_sample))]
 time_sample = np.delete(time_sample,index).tolist()
@@ -157,7 +157,7 @@ def plot(waveformx, waveformy, x,y,windowed_signal, window, freq,mag):
     ax.set_xlim(0,5)
     ax.set_ylim(-0.5,2)
     plt.grid(True)
-    #plt.savefig("/Users/willstoll/Desktop/Python/images/Handground.jpg", dpi=500)
+    plt.savefig("", dpi=500)
     plt.show()
 
 def main():
@@ -178,5 +178,3 @@ def main():
         outfile.writerow([freq[i].real,absorbance.real[i]])
 
 main()
-
-
