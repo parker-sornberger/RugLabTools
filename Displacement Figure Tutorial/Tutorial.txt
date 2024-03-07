@@ -1,0 +1,31 @@
+Eigenvector displacement image tutorial for a dimer
+
+You will need:
+A frequency output file (named output.txt)
+Mercury
+
+1.
+Paste Freq output file into folder and name it output.txt
+
+2.
+Run cifmaker.py
+
+3.
+Open this cif in mercury and add/delete molecules until you are happy
+
+4.
+Save this as a new cif  (name it CIF_FROM_MERCURY.cif) and a xyz file
+
+5.
+Open main.py and enter the mode that you want to visualize (ModeNumber = # in the second loop), then run code.py
+
+6.
+Open VMD and load in the xyz you made in step 4, and from the console used to open VMD type 'source run_modes.tcl'
+
+7.
+Load the visualization state "VMD_Vis_State" from the folder
+
+8. Render the file in vmd as a tachyon
+
+9. enter a new terminal in where the .dat file was created and run:
+./tachyonWIN32.exe YOURFILE.dat -aasamples 12 -res 8000 6000 -format BMP -o output.bmp
