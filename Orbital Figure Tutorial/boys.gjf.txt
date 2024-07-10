@@ -1,0 +1,10 @@
+%Mem=4GB
+%nprocshared=32
+%chk=BCar.chk
+
+#P RHF/6-31G** GEOM=CHECK GUESS=(READ,LOCAL,ONLY) POP=FULL GFINPUT IOP(6/7=3)
+6D 10F
+
+Beta Carotene Boys Localization
+
+0 1

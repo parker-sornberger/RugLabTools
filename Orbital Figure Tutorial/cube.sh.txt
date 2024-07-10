@@ -1,0 +1,8 @@
+#!/bin/bash
+#!/bin/bash
+#SBATCH -p vermont -t 30-0:00:00
+#SBATCH -N 1 --ntasks-per-node=32 --mem=0
+#SBATCH -o output.out
+
+module load gaussian/16-a03
+cubegen 32 MO="125,149" Bcar.fchk 125_149.cube
