@@ -1,0 +1,25 @@
+This is a tutorial to create some nice orbital figures
+
+You will need:
+A crystal structure
+VMD
+Gaussian
+
+1. Run a gaussian geometry opt of your system, an example is in this folder titled "Geoexample.gjf"
+2. Run a boys SCF calculation (This does not diagonalize the FOCK matrix, as HF orbitals are typically delocalized over the system). An example of this is provided in "boys.gjf". You must define the check file for the geometry opt in this file.
+3. Once the boys calculation is completed, you must format the check file to provide the orbitals and geometry by using the commands:
+module load gaussian/16-a03
+formchk ____.chk ____.fchk
+4. Take your formatted check file into Avogadro and visualize the orbitals, write down the orbitals you want to create figures of and close the program
+5. Now format the fchk file into a cube file (this will take a long time so it is recommended to use a submit.sh file). There is an example in "cube.sh". The MO="" line is where you define the orbitals to add to the cube file (separate by a comma).
+6. Load this cube file into VMD
+7. Load the visualization state
+8. Create three representations, CPK, and two ISOsurfaces
+9. Use the coloring method ColorID for the two isosurfaces with the values one and two
+10. Draw the isosurfaces with Solid Surface and material Transparent
+11. Use the isovalues -0.01 and 0.01 for bonding and antibonding orbitals
+12. Render with: display -> Rendermode -> GLSL
+12. Render using Tachyon
+13. Convert this dat file into a bmp image using the command:
+./tachyonWIN32.exe YOURFILE.dat -aasamples 12 -res 8000 6000 -format BMP -o output.bmp
+(Make sure you have the tachyon executable in the directory)
