@@ -46,9 +46,9 @@ for i in range(0,len(cellparam)):
     cellparam[i] = cellparam[i].split()
     outfile.write(f'''
     data__optstep{i+1}
-    _symmetry_cell_setting           orthorhombic
-    _symmetry_space_group_name_H-M   'P 21 21 21'
-    _symmetry_Int_Tables_number      19
+    _symmetry_cell_setting           triclinic
+    _symmetry_space_group_name_H-M   'P1'
+    _symmetry_Int_Tables_number      1
     _cell_length_a                   {cellparam[i][0]}
     _cell_length_b                   {cellparam[i][1]}
     _cell_length_c                   {cellparam[i][2]}
