@@ -5,176 +5,114 @@ Created on Wed Jun 22 10:06:27 2022
 
 @author: willstoll
 """
-#imports
+
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-import math
 
-#opening files
-infile_sample = open(r"C:\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test\coCO3_pos_2_2000.csv", "r")
-infile_blank = open(r"C:\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test\ptfe_pos1_2000_2.csv", "r")
+# File paths
+sample_file = r"F:/Toptica Temp/MT_Pyrene_VT/298_Sample.pulse.csv"
+blank_file = r"F:/Toptica Temp/MT_Pyrene_VT/298_Blank.pulse.csv"
 
-#outfile
-outfile = csv.writer(open(r"C:\\Users\sazarrel\OneDrive - Syracuse University\Desktop\Waveform_Testing\HDPE_Test_coCo3_2_ptfe1_out.csv", 'w', newline= ''))
+output_file = r"F:/Toptica Temp/CuTA_2/298_90nm.csv"
 
 
-#Time Data Raw
-infile_sample = infile_sample.readlines()
-infile_blank = infile_blank.readlines()
 
-trash = []
-time_sample = []
-pulse_sample = []
-time_blank = []
-pulse_blank = []
-
+# Function to read and clean data
+def read_data(file_path):
+    time_data, pulse_data, trash = [], [], []
     
-#test for data and sort out junk
-for line in infile_sample:
-    try:
-        time, pulse = line.split(",")
-        time_sample.append(float(time))
-        pulse_sample.append(float(pulse))
-    except ValueError:
-        trash.append(line)
+    with open(file_path, "r") as infile:
+        for line in infile:
+            try:
+                # Only process the first two columns
+                time, pulse, *_ = line.strip().split(",")
+                time_data.append(float(time))
+                pulse_data.append(float(pulse))
+            except ValueError:
+                trash.append(line)
+    
+    return time_data, pulse_data, trash
 
-for line in infile_blank:
-    try:
-        time, pulse = line.split(",")
-        time_blank.append(float(time))
-        pulse_blank.append(float(pulse))
-    except ValueError:
-        trash.append(line)
+# Read and clean sample and blank data
+time_sample, pulse_sample, trash_sample = read_data(sample_file)
+time_blank, pulse_blank, trash_blank = read_data(blank_file)
 
-waveformx = time_sample
-waveformy = pulse_sample
+# Print deleted lines
+print(f"Sample trash lines: {trash_sample}")
+print(f"Blank trash lines: {trash_blank}")
 
+# Timecut the data
+timecut = 25
+index = list(range(timecut * 20, len(time_sample)))
 
-#timecut the data
-timecut = 55
+time_sample = np.delete(time_sample, index).tolist()
+time_blank = np.delete(time_blank, index).tolist()
+pulse_sample = np.delete(pulse_sample, index).tolist()
+pulse_blank = np.delete(pulse_blank, index).tolist()
 
-index = [range(timecut*20, len(time_sample))]
-time_sample = np.delete(time_sample,index).tolist()
-time_blank = np.delete(time_blank,index).tolist()
-pulse_sample = np.delete(pulse_sample,index).tolist()
-pulse_blank = np.delete(pulse_blank,index).tolist()
-
-#HANN CORRECTION
-
-#test for pulse length
-length = time_sample.index(time_sample[-1]) - time_sample.index(time_sample[0])
-#print("length " + str(length) + " points")
-
-#test for position of peak
+# HANN correction
+length = len(time_sample)
 ymax = pulse_sample.index(max(pulse_sample))
-#print("ymax " + str(ymax) + " points")
+shift = (length - 2 * ymax)
+shift_time = shift / 20.0
 
-#calculate shift
-shift = ((length-2*ymax))
-#print("shift " + str(shift) + " points" + "shift " + str(shift/20) + " ps")
+# Adjust time and pulse data
+time_start = np.arange(time_sample[0] - shift_time, time_sample[0], 0.05).tolist()
+time_sample = time_start + time_sample
+time_blank = time_start + time_blank
 
-#Add time to time
+pulse_sample = [0] * len(time_start) + pulse_sample
+pulse_blank = [0] * len(time_start) + pulse_blank
 
-a = (len(time_sample))
-
-time_blank = np.arange(time_sample[0]-(shift)/20,time_sample[0],0.05).tolist() + time_blank
-time_sample = np.arange(time_sample[0]-(shift)/20,time_sample[0],0.05).tolist() + time_sample
-
-b = (len(time_sample))
-
-#Add zeropoints to pulse
-pulse_sample = [0]*(b-a) + pulse_sample
-pulse_blank = [0]*(b-a) + pulse_blank
-
-print(f"points that were deleted:{trash}")
-
-
-
-def FFT(time, pulse):
-    #creating signal and removing mintime
+# Fourier transform
+def fft_transform(time, pulse):
     mintime = min(time)
-    signal = np.array(time, dtype=float)
-    signal = signal - float(mintime)
+    signal = np.array(time) - mintime
 
-    
-    #creating zeropoints
     zeropoints = 8000
-    n = signal.size+2*zeropoints
+    n = len(signal) + 2 * zeropoints
     timestep = 0.05
-    
-    
-    #creating frequency points
-    freq = np.fft.fftfreq(n,d=timestep)
+    freq = np.fft.fftfreq(n, d=timestep)
 
-    
-    #creating a window (bring to 0)
     N = len(pulse)
-    psig = np.array(pulse, dtype=float)    
+    psig = np.array(pulse)
     window = np.hanning(N)
-    tobefft1 = psig*window
-    
-    
-    #adding zeropadding
-    tobefft2 = np.pad(tobefft1, (zeropoints,zeropoints), 'constant', constant_values=(0, 0))
-    
-    #performing FFT for hanned and padded points
-    outp = np.fft.fft(tobefft2)
+    windowed_signal = psig * window
 
-    return freq, outp, tobefft1, window
+    tobefft = np.pad(windowed_signal, (zeropoints, zeropoints), 'constant')
+    outp = np.fft.fft(tobefft)
 
+    return freq, outp, windowed_signal, window
 
-def plot(waveformx, waveformy, x,y,windowed_signal, window, freq,mag):
-    #untransformed data
-    plt.subplot(3,1,1)
-    plt.grid(True)
-    plt.plot(waveformx,waveformy,label='input data')
-    plt.ylabel('signal')
+# Perform FFT
+freq_blank, mag_blank, _, _ = fft_transform(time_blank, pulse_blank)
+freq_sample, mag_sample, windowed_signal_sample, window = fft_transform(time_sample, pulse_sample)
 
-    #HANNING WINDOW
-    #plt.subplot(4,1,2)
-    #plt.grid(True)
-    #plt.ylabel('Window')
-    #plt.plot(x,window) #HERE
+# Calculate absorbance
+absorbance = 2 * np.log10(np.abs(mag_blank) / np.abs(mag_sample))
 
-    #WINDOWED SIGNAL
-    plt.subplot(3,1,2)
-    plt.grid(True)
-    plt.ylabel('Windowed Signal')
-    plt.xlabel('time [s]')
-    plt.plot(x,windowed_signal) #HERE
-
-
-    #FFT Data
-    plt.subplot(3,1,3)
-    plt.plot((freq), mag, "r")
+# Plotting the data
+def plot_data(freq, absorbance):
+    plt.plot(freq, absorbance, "r", label="78")
     plt.ylabel('Absorbance')
     plt.xlabel('THz')
     plt.tight_layout()
 
-    #plot apperance
     ax = plt.gca()
-    ax.set_xlim(0,5)
-    ax.set_ylim(-0.5,2)
+    ax.set_xlim(0, 5)
+    ax.set_ylim(-0.1, 1)
+    plt.legend()
     plt.grid(True)
-    plt.savefig("", dpi=500)
+    plt.title('MT-Pyrene')
+    plt.savefig("C:/Users/wbsst/Desktop/temp.jpg", dpi=500)
     plt.show()
 
-def main():
-    #send files to FFT
+plot_data(np.abs(freq_sample), absorbance)
 
-    freq_blank, mag_blank, windowed_signal_sample, window = FFT(time_blank, pulse_blank)
-    freq_sample, mag_sample, windowed_signal_sample, window = FFT(time_sample, pulse_sample)  
-        
-    #Calculate Absorbance from the transformed data
-    absorbance = 2*np.log10(mag_blank/mag_sample)
-    freq = abs(freq_sample)
-    
-    #plot untransformed data
-    plot(waveformx, waveformy, time_sample, pulse_sample, windowed_signal_sample, window, freq, absorbance)
-    
-    #export data
-    for i in range(0, len(absorbance)):
-        outfile.writerow([freq[i].real,absorbance.real[i]])
+# Export data
+with open(output_file, "w", newline="") as outfile:
+    writer = csv.writer(outfile)
+    for i in range(len(absorbance)):
+        writer.writerow([freq_sample[i].real, absorbance[i].real])
 
-main()
